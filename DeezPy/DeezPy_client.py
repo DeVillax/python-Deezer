@@ -216,6 +216,181 @@ class Deezer(object):
         user = self._get(f"user/{userid}")
         return user
 
+# -------------- Create/Edit Methods (POST) -----------------------------------
+
+    def follow_playlist(self, user_id, playlist_id):
+        """
+        Add a playlist to the user's favorite
+
+        :param user_id: ID or URL
+        :param playlist_id: ID or URL
+        """
+        userid = self._get_id("user", user_id)
+        plistid = self._get_id("playlist", playlist_id)
+        operation = self._post(f"user/{userid}/playlists", "playlist_id", plistid)
+        return operation
+
+    def follow_podcast(self, user_id, podcast_id):
+        """
+        Add a podcast to the user's favorite
+
+        :param user_id: ID or URL
+        :param podcast_id:  ID or URL
+        """
+        userid = self._get_id("user", user_id)
+        pdcastid = self._get_id("show", podcast_id)
+        operation = self._post(f"user/{userid}/podcasts", "podcast_id", pdcastid)
+        return operation
+
+    def follow_album(self, user_id, album_id):
+        """
+        Add one or more albums to the user's library
+
+        :param user_id: ID or URL
+        :param album_id:  list of albums IDs or URLs
+        """
+        userid = self._get_id("user", user_id)
+        albid = self._get_id("album", album_id)
+        return self._post(f"user/{userid}/albums", "album_id", albid)
+
+    def follow_artist(self, user_id, artist_id):
+        """
+        Add one or more artists to the user's library
+        :param user_id: ID or URL
+        :param artist_ids: list of artists IDs or URLs
+        """
+        userid = self._get_id("user", user_id)
+        artid = self._get_id("artist", artist_id)
+        return self._post(f"user/{userid}/artists", "artist_id", artid)
+
+    def follow_user(self, user_id, user_to_follow):
+        """
+        Follow an user
+        :param user_id: ID or URL
+        :param user_to_follow: ID or URL
+        """
+        userid = self._get_id("user", user_id)
+        userfollowid = self._get_id("user", user_to_follow)
+        return self._post(f"user/{userid}/followings", "user_id", userfollowid)
+
+    def user_post_notification(self, user_id, message):
+        """
+        Post a notification in the user feed
+        :param user_id: ID or URL
+        :param message: string with the content of the notification
+        """
+        userid = self._get_id("user", user_id)
+        return self._post(f"user/{userid}/notifications", "message", message)
+
+    def create_folder(self, user_id, title):
+        """
+        Create a folder
+        :param user_id: ID or URL
+        :param title: The title of the new folder
+        """
+        userid = self._get_id("user", user_id)
+        return self._post(f"user/{userid}/folders", "title", title)
+
+    def create_playlist(self, user_id, title):
+        """
+        Create a playlist
+        :param user_id: ID or URL
+        :param title: Title of the new playlist
+        """
+        userid = self._get_id("user", user_id)
+        return self._post(f"user/{userid}/playlists", "title", title)
+
+    def add_track_favorite(self, user_id, track_id):
+        """
+        Add a track to the user's favorites
+        :param user_id: ID or URL
+        :param track_id: ID or URL
+        """
+        userid = self._get_id("user", user_id)
+        trackid = self._get_id("track", track_id)
+        return self._post(f"user/{userid}/tracks", "track_id", trackid)
+
+# <-------------------------- Delete Methods ----------------------------->
+
+    def delete_playlist(self, playlist_id):
+        """
+        Delete the playlist
+        :param playlist_id: ID or URL
+        """
+        plistid = self._get_id("playlist", playlist_id)
+        return self._delete(f"playlist/{plistid}")
+
+    def delete_tracks_from_playlist(self, playlist_id, tracks_ids):
+        """
+        Remove tracks from the playlist
+        :param playlist_id: ID or URL
+        :param tracks_ids: A comma separated list of track IDs or URLS
+        """
+        plistid = self._get_id("playlist", playlist_id)
+        ids = []
+        for track in tracks_ids:
+            ids.append(self._get_id("track", track))
+        return self._delete(f"playlist/{plistid}/tracks", "songs", ids)
+
+    def delete_comment(self, comment_id):
+        """
+        Remove a comment
+        :param comment_id: ID
+        """
+        cmmtid = self._get_id("comment", comment_id)
+        return self._delete(f"comment/{cmmtid}")
+
+    def delete_album(self, album_id):
+        """
+        Remove an album from the user's library
+        :param album_id: ID or URL
+        """
+        albid = self._get_id("album", album_id)
+        return self._delete(f"user/me/albums", "album_id", albid)
+
+    def delete_artist(self, artist_id):
+        """
+        Remove an artist from the user's favorities
+        :param artist_id: ID or URL
+        """
+        artid = self._get_id("artist", artist_id)
+        return self._delete(f"user/me/artists", "artist_id", artid)
+
+    def unfollow_user(self, user_id):
+        """
+        Unfollow an user
+        :param user_id: ID or URL
+        """
+        userid = self._get_id("profile", user_id)
+        return self._delete(f"user/me/followings", "user_id", userid)
+
+    def delete_podcast(self, podcast_id):
+        """
+        Remove a podcast from the user's favorite
+        :param podcast_id: ID or URL
+        """
+        podid = self._get_id("show", podcast_id)
+        return self._delete(f"user/me/podcasts", "podcast_id", podid)
+
+    def delete_favorite_track(self, track_id):
+        """
+        Remove a track from the user's favorites
+        :param track_id: ID or URL
+        """
+        trackid = self._get_id("track", track_id)
+        return self._delete(f"user/me/tracks", "track_id", trackid)
+    
+    def delete_folder(self, folder_id):
+        """
+        Delete a folder
+        :param folder_id: ID  
+        """
+        return self._delete(f"folder/{folder_id}")
+    
+    def delete_playlist_from_folder(self, folder_id, playlist_id):
+        pass
+
+
     def _get_id(self, type, id):
         fields = id.split("/")
         if len(fields) >= 3:
@@ -225,14 +400,30 @@ class Deezer(object):
         return id
 
     def _get(self, url):
+        result = self._call("GET", url)
+        return result
+
+    def _post(self, url, param, id):
+        result = self._call("POST", url, param, id)
+        return result
+
+    def _delete(self, url, param=None, id=None):
+        result = self._call("DELETE", url, param, id)
+        return result
+
+    def _call(self, call_method, url, param=None, id=None):
         if not url.startswith("http"):
             url = self.base_url + url
 
         if self._auth or self.client_credentials_manager:
             headers = self._auth_headers()
-            result = requests.get(url, params=headers)
+            if param and id:
+                headers[f"{param}"] = id
+                result = requests.request(call_method, url, params=headers)
+            else:
+                result = requests.request(call_method, url, params=headers)
         else:
-            result = requests.get(url)
+            result = requests.request(call_method, url)
         return result
 
     def _warn_message(self, message):
