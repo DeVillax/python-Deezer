@@ -56,7 +56,7 @@ class Deezer:
 
     def get_comment(self, comment_id):
         """
-        Retrieve informatio 
+        Retrieve informatio
         :param comment_id: ID of the comment
         :return: Information regarding the comment
         """
@@ -428,12 +428,9 @@ class Deezer:
         result = self._call("DELETE", url, param, id)
         return result
 
-    def _call(self, call_method, url, param=None, id=None, **kwargs):
+    def _call(self, call_method, url, param=None, id=None):
         if not url.startswith("http"):
             url = self.base_url + url
-
-        if len(kwargs) == 1:
-            url = f"{url}/{kwargs.get('method')}"
 
         if self._auth or self.client_credentials_manager:
             headers = self._auth_headers()
