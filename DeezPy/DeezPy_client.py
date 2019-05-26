@@ -9,11 +9,13 @@ class Deezer:
         self._auth = auth
         self.client_credentials_manager = client_credentials_manager
 
+# ------------------- GET Methods ------------------------------------
+
     def get_album(self, album_id, method=""):
         """
         Retrieve information about an album
         :param album_id: ID or URL of the album
-        :param kwargs: Allows to access information related to the album such as :
+        :param method: Allows to access information related to the album such as :
                        - 'fans',
                        - 'comments'
                        - 'tracks'
@@ -26,7 +28,7 @@ class Deezer:
     def get_artist(self, artist_id, method=""):
         """
         :param artist_id: ID or URL of the artist
-        :param **kwargs: To access further information related to artist:
+        :param method: To access further information related to artist:
                         - 'albums'
                         - 'comments'
                         - 'fans'
@@ -56,16 +58,15 @@ class Deezer:
 
     def get_comment(self, comment_id):
         """
-        Retrieve informatio
+        Get a comment
         :param comment_id: ID of the comment
-        :return: Information regarding the comment
+        :return: API Response
         """
         comment = self._get(f"comment/{comment_id}")
         return comment
 
     def get_editorial(self, method=""):
         """
-
         :param method: Editorial methods accepted:
                         'selection': Return a list of albums selected every week by the Deezer Team
                         'charts': Return four lists: Top track, Top album, Top artist and Top playlist
@@ -165,6 +166,27 @@ class Deezer:
         show = self._get(f"podcast/{showid}/{method}")
         return show
 
+    def get_track(self, track_id):
+        """
+
+        :param track_id: ID or URL
+        :return: return information about a track
+        """
+        trid = self._get_id("track", track_id)
+        track = self._get(f"track/{trid}")
+        return track
+
+    def get_user(self, user_id):
+        """
+
+        :param user_id: ID or URL
+        :return: information related to the user
+        """
+        userid = self._get_id("user", user_id)
+        user = self._get(f"user/{userid}")
+        return user
+
+# -------------- Search -------------------------------------------------------
     def search(self, keyword, method=""):
         """
         :param keyword: keyword for searching related content. Spaces are allowed.
@@ -186,25 +208,18 @@ class Deezer:
             results = self._get(f"search/{method}?q={keyword}")
         return results
 
-    def get_track(self, track_id):
+    def advanced_search(self, params):
         """
-
-        :param track_id: ID or URL
-        :return: return information about a track
+        Advanced search to find artists, albums or tracks
+        :param params: Search parameters. Must be a dictionary
+        :return:
         """
-        trid = self._get_id("track", track_id)
-        track = self._get(f"track/{trid}")
-        return track
-
-    def get_user(self, user_id):
-        """
-
-        :param user_id: ID or URL
-        :return: information related to the user
-        """
-        userid = self._get_id("user", user_id)
-        user = self._get(f"user/{userid}")
-        return user
+        if isinstance(params, dict):
+            query = " ".join(f"{key}:'{value}'" for key, value in params.items())
+            result = self._get(f"search?q={query}")
+            return result
+        else:
+            self._warn_message("Please revise your search parameters. A dictionary must be used.")
 
 # -------------- Create/Edit Methods (POST) -----------------------------------
 
@@ -416,8 +431,8 @@ class Deezer:
             return fields[-1]
         return id
 
-    def _get(self, url, **kwargs):
-        result = self._call("GET", url, **kwargs)
+    def _get(self, url):
+        result = self._call("GET", url)
         return result
 
     def _post(self, url, param, id):
@@ -432,6 +447,7 @@ class Deezer:
         if not url.startswith("http"):
             url = self.base_url + url
 
+        print(url)
         if self._auth or self.client_credentials_manager:
             headers = self._auth_headers()
             if param and id:
