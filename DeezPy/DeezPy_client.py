@@ -2,78 +2,68 @@ import sys
 import requests
 
 
-class Deezer(object):
+class Deezer:
 
     def __init__(self, auth=None, client_credentials_manager=None):
         self.base_url = "https://api.deezer.com/"
         self._auth = auth
         self.client_credentials_manager = client_credentials_manager
 
-    def _auth_headers(self):
-        if self._auth:
-            return {"access_token": self._auth}
-        elif self.client_credentials_manager:
-            return {"access_token": self.client_credentials_manager.token}
-        else:
-            token = self.client_credentials_manager.get_access_token()
-            return {"access_token": token}
-
-    def album(self, album_id, method=""):
+    def get_album(self, album_id, method=""):
         """
-        :param album_id: ID or URL
-        :param method: Album methods:
-                        'comments': Return a list of album's comments
-                        'fans': Return a list of album's fans
-                        'tracks': Return a list of album's tracks
-        :return: return information about the album if no method is provided.
+        Retrieve information about an album
+        :param album_id: ID or URL of the album
+        :param kwargs: Allows to access information related to the album such as :
+                       - 'fans',
+                       - 'comments'
+                       - 'tracks'
+        :return: response from the API
         """
         albid = self._get_id("album", album_id)
         album = self._get(f"album/{albid}/{method}")
         return album
 
-    def artist(self, artist_id, method=""):
+    def get_artist(self, artist_id, method=""):
         """
-        :param artist_id: ID or URL
-        :param method: :param album_id: ID or URL
-        :param method: Artist methods accepted:
-                        'albums': Return a list of artist's albums
-                        'comments': Return a list of artist's comments
-                        'fans': Return a list of artist's fans
-                        'playlists': Return a list of artist's playlists
-                        'radio': Return a list of tracks
-                        'related': Return a list of related artists
-                        'top': Get the top 5 tracks of an artist
-        :return: information related to the artist if no method is provided
+        :param artist_id: ID or URL of the artist
+        :param **kwargs: To access further information related to artist:
+                        - 'albums'
+                        - 'comments'
+                        - 'fans'
+                        - 'playlists'
+                        - 'radio'
+                        - 'related'
+                        - 'top'
+        :return: response from the API
         """
         artid = self._get_id("artist", artist_id)
         artist = self._get(f"artist/{artid}/{method}")
         return artist
 
-    def chart(self, type):
+    def get_chart(self, type):
         """
         Retrieve the top 10 items in the category provided.
-
         :param type: chart to retrieve. Params can be:
-                'tracks': returns list of object of type track of the Top 10 tracks
-                'albums': returns list of object of type album of the Top 10 album
-                'artists': returns list of object of type artist of the Top 10 artists
-                'playlists': returns list of object of type playlist of the Top 10 playlists
-                'podcasts': returns list of object of type podcast of the Top 10 podcasts
+                -'tracks'
+                -'albums'
+                -'artists'
+                -'playlists'
+                -'podcasts'
         :return: Depends on the category provided. (See above)
         """
         chart = self._get(f"chart/0/{type}")
         return chart
 
-    def comment(self, comment_id):
+    def get_comment(self, comment_id):
         """
-
+        Retrieve informatio 
         :param comment_id: ID of the comment
         :return: Information regarding the comment
         """
         comment = self._get(f"comment/{comment_id}")
         return comment
 
-    def editorial(self, method=""):
+    def get_editorial(self, method=""):
         """
 
         :param method: Editorial methods accepted:
@@ -88,7 +78,7 @@ class Deezer(object):
             editorial = self._get(f"editorial/0/{method}")
         return editorial
 
-    def episode(self, episode_id):
+    def get_episode(self, episode_id):
         """
         :param episode_id: ID or URL of the episode
         :return: information regarding the episode
@@ -97,14 +87,14 @@ class Deezer(object):
         episode = self._get(f"episode/{epid}")
         return episode
 
-    def infos(self):
+    def get_infos(self):
         """
         :return: Get information about the API in the current country
         """
         information = self._get("infos")
         return information
 
-    def me(self, method=""):
+    def get_me(self, method=""):
         """
         :param method: Me methods accepted:
                 'albums': Return a list of user's favorite albums
@@ -141,15 +131,15 @@ class Deezer(object):
             user = self._get(f"user/me/{method}")
         return user
 
-    def options(self):
+    def get_options(self):
         """
-
-        :return: Get the user's options
+        Get the user's options
+        :return: API response
         """
         options = self._get("options")
         return options
 
-    def playlist(self, playlist_id, method=""):
+    def get_playlist(self, playlist_id, method=""):
         """
 
         :param playlist_id: ID or URL
@@ -164,7 +154,7 @@ class Deezer(object):
         playlist = self._get(f"playlist/{playid}/{method}")
         return playlist
 
-    def podcast(self, show_id, method=""):
+    def get_podcast(self, show_id, method=""):
         """
         :param show_id: ID or URL
         :param method: Podcast accepted methods:
@@ -196,7 +186,7 @@ class Deezer(object):
             results = self._get(f"search/{method}?q={keyword}")
         return results
 
-    def track(self, track_id):
+    def get_track(self, track_id):
         """
 
         :param track_id: ID or URL
@@ -206,7 +196,7 @@ class Deezer(object):
         track = self._get(f"track/{trid}")
         return track
 
-    def user(self, user_id):
+    def get_user(self, user_id):
         """
 
         :param user_id: ID or URL
@@ -379,17 +369,44 @@ class Deezer(object):
         """
         trackid = self._get_id("track", track_id)
         return self._delete(f"user/me/tracks", "track_id", trackid)
-    
+
     def delete_folder(self, folder_id):
         """
         Delete a folder
-        :param folder_id: ID  
+        :param folder_id: ID
         """
         return self._delete(f"folder/{folder_id}")
-    
-    def delete_playlist_from_folder(self, folder_id, playlist_id):
-        pass
 
+    def delete_playlist_from_folder(self, folder_id, playlist_id):
+        """
+        Remove a playlist from the folder
+        :param folder_id: ID or URL
+        :param playlist_id: ID or URL
+        """
+        fldid = self._get_id("folder", folder_id)
+        plid = self._get_id("playlist", playlist_id)
+        return self._delete(f"folder/{fldid}/items", "playlist_id", plid)
+
+    def delete_album_from_folder(self, folder_id, album_id):
+        """
+        Remove an album from the folder
+        :param folder_id: ID or URL
+        :param album_id: ID or URL
+        """
+        fldid = self._get_id("folder", folder_id)
+        albid = self._get_id("album", album_id)
+        return self._delete(f"folder/{fldid}/items", "album_id", albid)
+
+# --------------------- Private Methods -------------------------------
+
+    def _auth_headers(self):
+        if self._auth:
+            return {"access_token": self._auth}
+        elif self.client_credentials_manager:
+            return {"access_token": self.client_credentials_manager.token}
+        else:
+            token = self.client_credentials_manager.get_access_token()
+            return {"access_token": token}
 
     def _get_id(self, type, id):
         fields = id.split("/")
@@ -399,8 +416,8 @@ class Deezer(object):
             return fields[-1]
         return id
 
-    def _get(self, url):
-        result = self._call("GET", url)
+    def _get(self, url, **kwargs):
+        result = self._call("GET", url, **kwargs)
         return result
 
     def _post(self, url, param, id):
@@ -411,9 +428,12 @@ class Deezer(object):
         result = self._call("DELETE", url, param, id)
         return result
 
-    def _call(self, call_method, url, param=None, id=None):
+    def _call(self, call_method, url, param=None, id=None, **kwargs):
         if not url.startswith("http"):
             url = self.base_url + url
+
+        if len(kwargs) == 1:
+            url = f"{url}/{kwargs.get('method')}"
 
         if self._auth or self.client_credentials_manager:
             headers = self._auth_headers()
