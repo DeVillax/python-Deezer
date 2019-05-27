@@ -85,26 +85,36 @@ class Deezer:
         :return: information regarding the episode
         """
         epid = self._get_id("episode", episode_id)
-        episode = self._get(f"episode/{epid}")
-        return episode
+        return self._get(f"episode/{epid}")
 
+    def get_all_genres(self):
+        """
+        Retrieve information about all genres available
+        :return: List of Genres objects
+        """
+        return self._get("genre")
+
+    def get_genre_details(self, id, method=""):
+        """
+        Retrieve further details of a given genre by the ID or name provided.
+        :param id: Genre's ID
+        :param method: Retrieve details of genre's 'artists', 'podcasts', or 'radios'
+        :return: Depends on the method used, it can return a list of Artists, Podcasts, or Radios
+                 objects
+        """
+        return self._get(f"genre/{id}/{method}")
+        
     def get_infos(self):
         """
         :return: Get information about the API in the current country
         """
-        information = self._get("infos")
-        return information
+        return self._get("infos")
 
     def get_me(self, method=""):
         """
         :param method: Me methods accepted:
                 'albums': Return a list of user's favorite albums
                 'artists': Return a list of user's favorite artists
-                'charts':
-                    -'/albums': Returns a list of the user's top albums
-                    -'/artists': Returns a list of the user's top artists
-                    -'/playlists': Returns a list of the user's top playlists
-                    -'/tracks': Returns a list of the user's top 25 tracks
                 'flow': Returns a list of user's flow tracks
                 'folders': Return a list of user's Folder
                 'followings': Return a list of user's Friends
@@ -112,7 +122,7 @@ class Deezer:
                 'history': Returns a list of the recently played tracks
                 'permissions': Return the user's Permissions granted to the application
                 'options': Return user's options
-                'personal_songs': Return a list of user's personnal song
+                'personal_songs': Return a list of user's personal song
                 'playlists': Return a list of user's public Playlist. Permission is needed to return private playlists
                 'podcasts': Return a list of user's favorite podcasts
                 'radios': Return a list of user's favorite Radio
@@ -132,13 +142,40 @@ class Deezer:
             user = self._get(f"user/me/{method}")
         return user
 
+    def get_me_top_tracks(self):
+        """
+        Retrieve information about the current user's top tracks
+        :return: A list of the user's top 25 tracks. List of Tracks objects
+        """
+        return self._get("user/me/charts/tracks")
+
+    def get_me_top_albums(self):
+        """
+        Retrieve information about the current user's top albums
+        :return: List of Album objects
+        """
+        return self._get("user/me/charts/albums")
+
+    def get_me_top_playlists(self):
+        """
+        Retrieve information about the current user's top playlists
+        :return: List of Playlist objects
+        """
+        return self._get("user/me/charts/playlists")
+
+    def get_me_top_artists(self):
+        """
+        Fetch information about the current user's top artists
+        :return: List of Artists objects
+        """
+        return self._get("user/me/charts/artists")
+
     def get_options(self):
         """
         Get the user's options
         :return: API response
         """
-        options = self._get("options")
-        return options
+        return self._get("options")
 
     def get_playlist(self, playlist_id, method=""):
         """
@@ -220,6 +257,15 @@ class Deezer:
             return result
         else:
             self._warn_message("Please revise your search parameters. A dictionary must be used.")
+
+    def next(self, response):
+        """
+        :param url: previous response from the API
+        """
+        if response.get("next"):
+            self._get(response["next"])
+        else:
+            return None
 
 # -------------- Create/Edit Methods (POST) -----------------------------------
 
