@@ -2,6 +2,17 @@ import sys
 import requests
 
 
+class DezzerException(Exception):
+
+    def __init__(self, ty, message, code):
+        self.type = ty
+        self.msg = message
+        self.code = code
+
+    def __str__(self):
+        return f"An error has occurred:\n{self.type}\n{self.msg}\nCode: {self.code}"
+
+
 class Deezer:
 
     def __init__(self, auth=None, client_credentials_manager=None):
@@ -42,10 +53,10 @@ class Deezer:
         artist = self._get(f"artist/{artid}/{method}")
         return artist
 
-    def get_chart(self, type):
+    def get_chart(self, ty):
         """
         Retrieve the top 10 items in the category provided.
-        :param type: chart to retrieve. Params can be:
+        :param ty: type of chart to retrieve. Params can be:
                 -'tracks'
                 -'albums'
                 -'artists'
@@ -53,7 +64,7 @@ class Deezer:
                 -'podcasts'
         :return: Depends on the category provided. (See above)
         """
-        chart = self._get(f"chart/0/{type}")
+        chart = self._get(f"chart/0/{ty}")
         return chart
 
     def get_comment(self, comment_id):
@@ -103,7 +114,7 @@ class Deezer:
                  objects
         """
         return self._get(f"genre/{id}/{method}")
-        
+
     def get_infos(self):
         """
         :return: Get information about the API in the current country
@@ -215,7 +226,6 @@ class Deezer:
 
     def get_user(self, user_id):
         """
-
         :param user_id: ID or URL
         :return: information related to the user
         """
@@ -260,10 +270,10 @@ class Deezer:
 
     def next(self, response):
         """
-        :param url: previous response from the API
+        :param response: previous response from the API
         """
         if response.get("next"):
-            self._get(response["next"])
+            return self._get(response["next"])
         else:
             return None
 
@@ -308,7 +318,7 @@ class Deezer:
         """
         Add one or more artists to the user's library
         :param user_id: ID or URL
-        :param artist_ids: list of artists IDs or URLs
+        :param artist_id: list of artists IDs or URLs
         """
         userid = self._get_id("user", user_id)
         artid = self._get_id("artist", artist_id)
@@ -401,7 +411,7 @@ class Deezer:
 
     def delete_artist(self, artist_id):
         """
-        Remove an artist from the user's favorities
+        Remove an artist from the user's favourites
         :param artist_id: ID or URL
         """
         artid = self._get_id("artist", artist_id)
@@ -493,7 +503,6 @@ class Deezer:
         if not url.startswith("http"):
             url = self.base_url + url
 
-        print(url)
         if self._auth or self.client_credentials_manager:
             headers = self._auth_headers()
             if param and id:
@@ -503,7 +512,16 @@ class Deezer:
                 result = requests.request(call_method, url, params=headers)
         else:
             result = requests.request(call_method, url)
+
+        result = result.json()
+
+        if "error" in result:
+            ty = result["error"]["type"]
+            message = result["error"]["message"]
+            code = result["error"]["code"]
+            return DezzerException(ty, message, code)
         return result
 
     def _warn_message(self, message):
         print(f"warning: {message}", file=sys.stderr)
+
