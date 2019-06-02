@@ -1,0 +1,1 @@
+from .deezerpy import Deezer, DeezerException
