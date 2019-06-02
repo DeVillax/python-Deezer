@@ -1,5 +1,5 @@
 import unittest
-import deezer
+from deezerpy import deezerpy
 
 
 class TestDeezerClient(unittest.TestCase):
@@ -23,7 +23,8 @@ class TestDeezerClient(unittest.TestCase):
     ghostsnstuff_track_id = "89844257"
 
     def setUp(self):
-        self.dz = deezer.Deezer()
+        self.dz = deezerpy.Deezer()
+        self.auth_dez = deezerpy.Deezer(auth="Your access token here")
 
     # ----------- Albums Tests -------------------
 
@@ -46,6 +47,14 @@ class TestDeezerClient(unittest.TestCase):
     def test_album_comments(self):
         comments = self.dz.get_album(self.flume_album_id, method="comments")
         self.assertTrue(comments["data"][0]["type"] == "comment")
+
+    def test_follow_album(self):
+        operation = self.auth_dez.follow_album("me", self.skin_album_url)
+        self.assertTrue(operation)
+
+    def test_unfollow_album(self):
+        operation = self.auth_dez.delete_album(self.skin_album_url)
+        self.assertTrue(operation)
 
     # ----------- Artists Tests ------------------
 
@@ -77,23 +86,17 @@ class TestDeezerClient(unittest.TestCase):
                 comment_found = True
         self.assertTrue(comment_found)
 
-    """
     def test_artist_fans(self):
-        # Need to finish this one
         fans = self.dz.get_artist(self.deadmau5_artist_id, "fans")
         self.assertTrue(len(fans["data"]) > 0)
 
         fan_found = False
-        while fans.get("next"):
-            for fan in fans["data"]:
-                if fan["name"] == "Gatlock":
-                    fan_found = True
-                    break
-            if fan_found:
+        for fan in fans["data"]:
+            if fan["name"] == "igorgoal":
+                fan_found = True
                 break
-            fans = self.dz.next(fans)
         self.assertTrue(fan_found)
-    """
+
     def test_artist_playlists(self):
         playlists = self.dz.get_artist(self.deadmau5_artist_id, "playlists")
         self.assertTrue(len(playlists) > 0)
@@ -127,7 +130,7 @@ class TestDeezerClient(unittest.TestCase):
         content_found = False
         while 1:
             for content in related["data"]:
-                if content["name"] == "Martin Garrix":
+                if content["name"] == "Nero":
                     content_found = True
                     break
 
@@ -145,6 +148,28 @@ class TestDeezerClient(unittest.TestCase):
             if track["title"] == "I Remember":
                 track_found = True
         self.assertTrue(track_found)
+
+    def test_follow_artist(self):
+        operation = self.auth_dez.follow_artist("me", self.flume_artist_url)
+        self.assertTrue(operation)
+
+        success = False
+        artists = self.auth_dez.get_me("artists")
+        for artist in artists["data"]:
+            if artist["id"] == 1164295:
+                success = True
+        self.assertTrue(success)
+
+    def test_unfollow_artist(self):
+        operation = self.auth_dez.delete_artist(self.flume_artist_url)
+        self.assertTrue(operation)
+
+        success = True
+        artists = self.auth_dez.get_me("artists")
+        for artist in artists["data"]:
+            if artist["id"] == 1164295:
+                success = False
+        self.assertTrue(success)
 
     # ------------- Playlist Tests -------------------
 
@@ -170,7 +195,6 @@ class TestDeezerClient(unittest.TestCase):
     def test_playlist_fans(self):
         fans = self.dz.get_playlist(self.summer_hits_playlist_url, "fans")
         self.assertTrue(len(fans) > 0)
-        print(fans)
         fan_found = False
         for fan in fans["data"]:
             if fan["name"] == "mikadov":
@@ -193,6 +217,28 @@ class TestDeezerClient(unittest.TestCase):
             tracks = self.dz.next(tracks)
         self.assertTrue(track_found)
 
+    def test_follow_playlist(self):
+        operation = self.auth_dez.follow_playlist("me", self.summer_sounds_playlist_id)
+        self.assertTrue(operation)
+
+        success = False
+        playlists = self.auth_dez.get_me("playlists")
+        for playls in playlists["data"]:
+            if playls["id"] == 4793446724:
+                success = True
+        self.assertTrue(success)
+
+    def test_unfollow_playlist(self):
+        operation = self.auth_dez.delete_playlist(self.summer_sounds_playlist_id)
+        self.assertTrue(operation)
+
+        success = True
+        playlists = self.auth_dez.get_me("playlists")
+        for playls in playlists["data"]:
+            if playls["id"] == 4793446724:
+                success = False
+        self.assertTrue(success)
+
     # ---------- Track Tests ----------------------------
 
     def test_track_id(self):
@@ -202,6 +248,26 @@ class TestDeezerClient(unittest.TestCase):
     def test_track_url(self):
         track = self.dz.get_track(self.iremember_track_url)
         self.assertTrue(track["title"] == "I Remember")
+
+    def test_add_track_favourites(self):
+        operation = self.auth_dez.add_track_favorite("me", self.iremember_track_url)
+        self.assertTrue(operation)
+
+        tracks = self.auth_dez.get_me("tracks")
+        self.assertTrue(len(tracks) > 0)
+        success = False
+
+        while 1:
+            for track in tracks["data"]:
+                if track["id"] == 89844257:
+                    success = True
+                    break
+            if success:
+                break
+            tracks = self.auth_dez.next(tracks)
+        self.assertTrue(success)
+
+
 
     # ---------- Search Test ----------------------------
 
