@@ -341,6 +341,16 @@ class Deezer:
         userid = self._get_id("user", user_id)
         trackid = self._get_id("track", track_id)
         return self._post(f"user/{userid}/tracks", "track_id", trackid)
+    
+    def add_track_playlist(self, playlist_id, track_id):
+        """
+        Add a track to a playlist
+        :param playlist_id: ID or URL
+        :param track_id: ID or URL
+        """
+        playlistid = self._get_id("playlist", playlist_id)
+        trackid = self._get_id("track", track_id)
+        return self._post(f"playlist/{playlistid}/tracks", "songs", trackid)
 
 # <-------------------------- Delete Methods ----------------------------->
 
